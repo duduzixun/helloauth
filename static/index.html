@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            color: #1a1a2e;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3848;
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .twofa-list {
+            list-style: none;
+        }
+
+        .twofa-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .twofa-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .twofa-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .twofa-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .twofa-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .twofa-name {
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .twofa-secret {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #666;
+            letter-spacing: 2px;
+        }
+
+        .twofa-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .twofa-item:hover .twofa-actions {
+            opacity: 1;
+        }
+
+        .code-display {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .code-value {
+            font-family: 'Courier New', monospace;
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #00ff88;
+            margin-bottom: 8px;
+        }
+
+        .code-timer {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .code-timer span {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 450px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            color: #1a1a2e;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .modal-close:hover {
+            background: #e0e0e0;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .form-actions .btn {
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+        }
+
+        .qr-modal {
+            text-align: center;
+        }
+
+        .qr-modal img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .twofa-item {
+                flex-wrap: wrap;
+            }
+
+            .twofa-info {
+                width: calc(100% - 64px);
+                margin-bottom: 12px;
+            }
+
+            .twofa-actions {
+                opacity: 1;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .code-value {
+                font-size: 1.75rem;
+                letter-spacing: 4px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 2FA管理系统</h1>
+            <p>安全管理您的双因素认证密钥</p>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>我的2FA配置</h2>
+                <button class="btn btn-primary" onclick="openAddModal()">+ 新增配置</button>
+            </div>
+            
+            <ul class="twofa-list" id="twofaList">
+                <li class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <h3>暂无配置</h3>
+                    <p>点击上方按钮添加您的第一个2FA配置</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>新增2FA配置</h3>
+                <button class="modal-close" onclick="closeAddModal()">×</button>
+            </div>
+            <form id="addForm">
+                <div class="form-group">
+                    <label for="addName">名称</label>
+                    <input type="text" id="addName" placeholder="例如：GitHub" required>
+                </div>
+                <div class="form-group">
+                    <label for="addSecret">密钥（可选，留空自动生成）</label>
+                    <input type="text" id="addSecret" placeholder="Base32格式密钥">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">确认添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>编辑2FA配置</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editName">名称</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSecret">密钥</label>
+                    <input type="text" id="editSecret" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">×</button>
+            </div>
+            <p>确定要删除 "<span id="deleteName"></span>" 这个配置吗？此操作不可撤销。</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="qrModal">
+        <div class="modal qr-modal">
+            <div class="modal-header">
+                <h3>扫码添加</h3>
+                <button class="modal-close" onclick="closeQrModal()">×</button>
+            </div>
+            <img id="qrImage" src="" alt="QR Code">
+            <p>使用认证APP扫描此二维码</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let editingName = null;
+        let deletingName = null;
+        let currentCodeInterval = null;
+
+        async function loadTwoFA() {
+            try {
+                const response = await fetch('/2fa/list');
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    document.getElementById('twofaList').innerHTML = `
+                        <li class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="M9 12l2 2 4-4"/>
+                            </svg>
+                            <h3>暂无配置</h3>
+                            <p>点击上方按钮添加您的第一个2FA配置</p>
+                        </li>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                data.forEach(item => {
+                    html += `
+                        <li class="twofa-item" onclick="showCode('${item.name}')">
+                            <div class="twofa-icon">${getIcon(item.name)}</div>
+                            <div class="twofa-info">
+                                <div class="twofa-name">${escapeHtml(item.name)}</div>
+                                <div class="twofa-secret">${item.secret}</div>
+                            </div>
+                            <div class="twofa-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); showQrCode('${item.name}')" title="查看二维码">📷</button>
+                                <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); openEditModal('${item.name}', '${item.secret}')">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); openDeleteModal('${item.name}')">删除</button>
+                            </div>
+                        </li>
+                    `;
+                });
+                document.getElementById('twofaList').innerHTML = html;
+            } catch (error) {
+                showToast('加载失败', 'error');
+            }
+        }
+
+        function getIcon(name) {
+            const icons = {
+                'github': '🐙', 'git': '🐙',
+                'google': '🔷', 'gmail': '📧',
+                'twitter': '🐦', 'x': '𝕏',
+                'facebook': '📘', 'fb': '📘',
+                'linkedin': '💼',
+                'discord': '💬',
+                'telegram': '✈️',
+                'whatsapp': '💚',
+                'amazon': '📦',
+                'apple': '🍎',
+                'microsoft': '🪟', 'ms': '🪟',
+                'steam': '🎮',
+                'epic': '⚔️',
+                'reddit': '🤖',
+                'youtube': '📺',
+                'twitch': '🟣',
+                'paypal': '💳',
+                'bank': '🏦',
+                'crypto': '₿', 'coin': '₿', 'binance': '🟡',
+                'email': '📧',
+                'cloud': '☁️', 'aws': '☁️', 'azure': '☁️'
+            };
+            const lowerName = name.toLowerCase();
+            for (const [key, icon] of Object.entries(icons)) {
+                if (lowerName.includes(key)) return icon;
+            }
+            return '🔑';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function openAddModal() {
+            document.getElementById('addName').value = '';
+            document.getElementById('addSecret').value = '';
+            document.getElementById('addModal').classList.add('show');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+        }
+
+        function openEditModal(name, secret) {
+            editingName = name;
+            document.getElementById('editName').value = name;
+            document.getElementById('editSecret').value = secret;
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        function closeEditModal() {
+            editingName = null;
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        function openDeleteModal(name) {
+            deletingName = name;
+            document.getElementById('deleteName').textContent = name;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            deletingName = null;
+            document.getElementById('deleteModal').classList.remove('show');
+        }
+
+        function closeQrModal() {
+            document.getElementById('qrModal').classList.remove('show');
+        }
+
+        async function showQrCode(name) {
+            try {
+                const response = await fetch(`/2fa/get/${name}`);
+                const data = await response.json();
+                document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qr_uri)}`;
+                document.getElementById('qrModal').classList.add('show');
+            } catch (error) {
+                showToast('获取二维码失败', 'error');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        document.getElementById('addForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('addName').value.trim();
+            const secret = document.getElementById('addSecret').value.trim() || null;
+
+            try {
+                const response = await fetch('/2fa/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, secret })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    closeAddModal();
+                    loadTwoFA();
+                    showToast('添加成功');
+                    document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qr_uri)}`;
+                    document.getElementById('qrModal').classList.add('show');
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || '添加失败', 'error');
+                }
+            } catch (error) {
+                showToast('添加失败', 'error');
+            }
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('editName').value.trim();
+            const secret = document.getElementById('editSecret').value.trim();
+
+            try {
+                const response = await fetch(`/2fa/update/${editingName}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, secret })
+                });
+
+                if (response.ok) {
+                    closeEditModal();
+                    loadTwoFA();
+                    showToast('修改成功');
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || '修改失败', 'error');
+                }
+            } catch (error) {
+                showToast('修改失败', 'error');
+            }
+        });
+
+        async function confirmDelete() {
+            try {
+                const response = await fetch(`/2fa/delete/${deletingName}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    closeDeleteModal();
+                    loadTwoFA();
+                    showToast('删除成功');
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || '删除失败', 'error');
+                }
+            } catch (error) {
+                showToast('删除失败', 'error');
+            }
+        }
+
+        async function showCode(name) {
+            const li = Array.from(document.querySelectorAll('.twofa-item')).find(el => 
+                           el.querySelector('.twofa-name').textContent === name);
+            
+            if (!li) return;
+
+            let codeDiv = li.querySelector('.code-display');
+            if (codeDiv) {
+                codeDiv.remove();
+                if (currentCodeInterval) {
+                    clearInterval(currentCodeInterval);
+                    currentCodeInterval = null;
+                }
+                return;
+            }
+
+            codeDiv = document.createElement('div');
+            codeDiv.className = 'code-display';
+            li.appendChild(codeDiv);
+
+            await updateCode(name, codeDiv);
+            currentCodeInterval = setInterval(() => {
+                updateCode(name, codeDiv);
+            }, 1000);
+        }
+
+        async function updateCode(name, element) {
+            try {
+                const response = await fetch(`/2fa/generate/${name}`);
+                const data = await response.json();
+                
+                const now = Math.floor(Date.now() / 1000);
+                const remaining = data.expires_at - now;
+                
+                element.innerHTML = `
+                    <div class="code-value">${data.code}</div>
+                    <div class="code-timer">剩余 <span>${remaining}s</span> 刷新</div>
+                `;
+
+                if (remaining <= 0) {
+                    await updateCode(name, element);
+                }
+            } catch (error) {
+                element.innerHTML = '<div style="color: #ff6b6b;">获取失败</div>';
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', loadTwoFA);
+    </script>
+</body>
+</html>

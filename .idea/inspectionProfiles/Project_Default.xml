@@ -1,0 +1,49 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="false" level="WARNING" enabled_by_default="false">
+      <option name="ignoredPackages">
+        <list>
+          <option value="vnpy" />
+          <option value="numpy" />
+          <option value="pandas" />
+          <option value="requests" />
+          <option value="pyside6" />
+          <option value="futu" />
+          <option value="akshare" />
+          <option value="python-dotenv" />
+          <option value="pyzmq" />
+          <option value="polars" />
+          <option value="logger" />
+          <option value="tqdm" />
+          <option value="plotly" />
+          <option value="loguru" />
+          <option value="pyqtgraph" />
+          <option value="QDarkStyle" />
+          <option value="tzlocal" />
+          <option value="deap" />
+          <option value="websocket-client" />
+          <option value="vnpy_scripttrader" />
+          <option value="vnpy_datarecorder" />
+          <option value="vnpy_ctastrategy" />
+          <option value="vnpy_riskmanager" />
+          <option value="vnpy_ctabacktester" />
+          <option value="vnpy_datamanager" />
+          <option value="vnpy_binance" />
+          <option value="vnpy_webtrader" />
+          <option value="ccxt" />
+          <option value="vnpy_okx" />
+          <option value="vnpy_rest" />
+          <option value="vnpy_websocket" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N801" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
